@@ -1,0 +1,52 @@
+[
+  {
+    "title": "Project Bootstrap & Architecture Setup",
+    "body": "Initialize backend project with production-style structure.\n\nScope:\n- Setup folder structure (modules, config, database, shared)\n- Configure TypeScript\n- Setup ESLint + Prettier + Husky hooks\n- Create environment configuration loader\n- Add centralized error handling pattern\n- Add health check endpoint\n\nAcceptance Criteria:\n- Project builds without errors\n- Lint + format run automatically\n- Environment variables validated at startup\n- Base architecture ready for scaling",
+    "labels": ["setup", "architecture"]
+  },
+  {
+    "title": "PostgreSQL Integration & Database Layer",
+    "body": "Configure database connectivity and abstraction layer.\n\nScope:\n- Setup PostgreSQL connection with pooling\n- Create database module\n- Add migration system\n- Configure transactional support\n- Add base repository pattern\n- Setup query logging for development\n\nAcceptance Criteria:\n- DB connects successfully\n- Migration runs via CLI\n- Transactions supported\n- Connection pooling configured",
+    "labels": ["database", "infrastructure"]
+  },
+  {
+    "title": "Users Schema + Migration + Constraints",
+    "body": "Design and implement production-ready users table.\n\nScope:\n- Create users migration\n- Add constraints (unique email, not null fields)\n- Add indexes for lookup performance\n- Implement soft delete support\n- Add timestamps and auditing fields\n- Validate schema with seed data\n\nAcceptance Criteria:\n- Migration reversible\n- Indexes applied correctly\n- Duplicate email rejected\n- Schema tested with inserts",
+    "labels": ["database", "auth"]
+  },
+  {
+    "title": "Authentication Module (Registration Flow)",
+    "body": "Implement secure user registration system.\n\nScope:\n- Input validation layer\n- Password hashing (bcrypt)\n- DTO + service + controller layers\n- Error handling strategy\n- Prevent duplicate registrations\n- Add unit tests for service logic\n\nAcceptance Criteria:\n- Password stored hashed\n- Validation errors handled cleanly\n- API tested via Postman\n- Unit tests passing",
+    "labels": ["backend", "auth"]
+  },
+  {
+    "title": "JWT Authentication & Authorization Middleware",
+    "body": "Implement login + token-based authentication.\n\nScope:\n- Login endpoint\n- JWT generation + verification\n- Auth middleware\n- Role-based guard structure\n- Token expiration strategy\n- Secure config management\n\nAcceptance Criteria:\n- Protected routes require token\n- Invalid tokens rejected\n- Middleware reusable\n- Auth flow documented",
+    "labels": ["backend", "security"]
+  },
+  {
+    "title": "Organizer Domain Modeling",
+    "body": "Implement organizer entity and relation to users.\n\nScope:\n- Create organizers table\n- Define 1:1 relation with users\n- Add verification flag + metadata\n- Implement organizer creation flow\n- Add authorization rules\n- Seed organizer test data\n\nAcceptance Criteria:\n- Organizer linked correctly to user\n- Cannot create event without organizer role\n- Schema validated with joins",
+    "labels": ["database", "domain"]
+  },
+  {
+    "title": "Venues Management Module",
+    "body": "Create venue model for hosting events.\n\nScope:\n- Venues schema + migration\n- Capacity validation logic\n- Geo-location fields\n- CRUD endpoints for venues\n- Add indexing for city searches\n- Add sample venue dataset\n\nAcceptance Criteria:\n- Venue CRUD functional\n- Capacity enforced\n- Queries optimized with indexes",
+    "labels": ["database", "backend"]
+  },
+  {
+    "title": "Events Core Domain Implementation",
+    "body": "Implement main events entity and lifecycle.\n\nScope:\n- Events table with FK relations\n- Status lifecycle (draft → published → cancelled)\n- Date validation logic\n- Event creation service\n- Organizer ownership enforcement\n- Add integration tests\n\nAcceptance Criteria:\n- Event linked to venue + organizer\n- Invalid dates rejected\n- Lifecycle works correctly",
+    "labels": ["core", "backend"]
+  },
+  {
+    "title": "Event Creation API + Validation Layer",
+    "body": "Expose production-ready API for creating events.\n\nScope:\n- Request validation schemas\n- Authorization enforcement\n- Service-level business validation\n- Logging for audit trail\n- API response standardization\n- Add error scenarios testing\n\nAcceptance Criteria:\n- Only organizers allowed\n- Validation prevents bad input\n- Responses follow unified format",
+    "labels": ["backend", "api"]
+  },
+  {
+    "title": "Ticket Types Domain (Pricing Engine Foundation)",
+    "body": "Implement ticket tier system for events.\n\nScope:\n- Ticket types schema\n- Pricing + quantity constraints\n- Sale window validation\n- Prevent overselling logic foundation\n- Index for fast availability lookup\n- Prepare structure for future dynamic pricing\n\nAcceptance Criteria:\n- Ticket types linked to event\n- Quantity cannot go negative\n- Sale window enforced\n- Query performance validated",
+    "labels": ["ticketing", "core"]
+  }
+]
