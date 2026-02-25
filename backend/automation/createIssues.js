@@ -1,4 +1,3 @@
-require('dotenv').config({ path: '../.env' });
 const axios = require('axios');
 
 const issues = require('./issues.json');
