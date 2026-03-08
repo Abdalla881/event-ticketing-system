@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseUUIDPipe,
   Post,
   Put,
 } from '@nestjs/common';
@@ -31,24 +32,24 @@ export class UsersController {
   // @desc Get a user by id
   // @route GET api/v1/users/:id
   // @access public
-  @Get('/:id')
-  findOne(@Param('id') id: string) {
+  @Get(':id')
+  findOne(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.usersService.findOne(id);
   }
 
   // @desc Update a user by id
   // @route PUT api/v1/users/:id
   // @access private[admin]
-  @Put('/:id')
-  update(@Param('id') id: string, @Body() updateUserData) {
+  @Put(':id')
+  update(@Param('id', new ParseUUIDPipe()) id: string, @Body() updateUserData) {
     return this.usersService.update(id, updateUserData);
   }
 
   // @desc Delete a user by id
   // @route DELETE api/v1/users/:id
   // @access private[admin]
-  @Delete('/:id')
-  delete(@Param('id') id: string) {
+  @Delete(':id')
+  delete(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.usersService.delete(id);
   }
 }
