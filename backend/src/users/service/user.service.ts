@@ -34,8 +34,7 @@ export class UsersService {
   }
 
   async create(createUserData) {
-    const { first_name, last_name, email, password, status, phone } =
-      createUserData;
+    const { user_name, email, password, status, phone } = createUserData;
 
     // Check if email already exists
     const existingUser = await this.pool.query(
@@ -49,8 +48,8 @@ export class UsersService {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const res = await this.pool.query(
-      'insert into users (first_name,last_name,email,password,status,phone) values ($1,$2,$3,$4,$5,$6) returning *',
-      [first_name, last_name, email, hashedPassword, status, phone],
+      'insert into users (user_name,email,password,status,phone) values ($1,$2,$3,$4,$5) returning *',
+      [user_name, email, hashedPassword, status, phone],
     );
     if (res.rows.length === 0) {
       throw new NotFoundException('User not created');
