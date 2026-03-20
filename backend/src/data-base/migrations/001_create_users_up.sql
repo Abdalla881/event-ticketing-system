@@ -1,28 +1,36 @@
-Create Extension if not exist "citext" 
-create Extinsion if not exist "uuid-ossp"
+CREATE EXTENSION IF NOT EXISTS "citext";
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-Create table users {
-    id UUID primery key defult uuid_generate_v4(),
-    email Citext not null unique,
-    first_name varchar(100) not null,
-    last-name varchar(100) not null 
-    password varchar(255) not null,
-    status user_status('active', 'inactive') not null default 'active',
-    phone varchar(20) not null,
-    created_at timestamptz not null default now(),
-    updated_at timestamptz not null default now()
-}
+CREATE TYPE user_status AS ENUM ('active', 'inactive');
 
-// Trigger to update the updated_at column on update
-create or replace function update_updated_at_column()
-returns trigger as $$ 
-begin
-   new.updated_at = now();
-   return new;
-end;
-$$ language 'plpgsql';
+CREATE TABLE users (
+    id             UUID           PRIMARY KEY DEFAULT uuid_generate_v4(),
+    email          CITEXT         NOT NULL UNIQUE,
+    user_name      VARCHAR(100)   NOT NULL,
+    password       VARCHAR(255),
+    status         user_status    NOT NULL DEFAULT 'active',
+    phone          VARCHAR(20),
+    role           VARCHAR(50)    NOT NULL DEFAULT 'user',
+    google_id      VARCHAR(255),
+    provider       VARCHAR(50)    DEFAULT 'local',
+    reset_code          VARCHAR(255),
+    reset_code_expires  TIMESTAMPTZ,
+    reset_code_verified BOOLEAN        DEFAULT FALSE,
+    created_at     TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+    updated_at     TIMESTAMPTZ    NOT NULL DEFAULT NOW()
+);
 
-create trigger update_users_updated_at
-before update on users
-for each row
-execute procedure update_updated_at_column();
+
+-- Trigger function to auto-update updated_at on row update
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+   NEW.updated_at = NOW();
+   RETURN NEW;
+END;
+$$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER update_users_updated_at
+BEFORE UPDATE ON users
+FOR EACH ROW
+EXECUTE PROCEDURE update_updated_at_column();
