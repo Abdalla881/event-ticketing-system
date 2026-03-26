@@ -4,8 +4,10 @@ import { UsersModule } from './users/users.module';
 import { OrganizersModule } from './organizers/organizers.module';
 import { AuthModule } from './auth/auth.module';
 import { EventsModule } from './events/events.module';
+import { TicketTypesModule } from './ticket-types/ticket-types.module';
 
 @Module({
-  imports: [DataBaseModule, UsersModule, OrganizersModule, AuthModule, EventsModule],
+  imports: [DataBaseModule, UsersModule, OrganizersModule, AuthModule, EventsModule, TicketTypesModule],
 })
 export class AppModule {}
+
