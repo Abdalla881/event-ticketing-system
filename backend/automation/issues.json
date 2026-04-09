@@ -1,52 +1,194 @@
 [
   {
-    "title": "Project Bootstrap & Architecture Setup",
-    "body": "Initialize backend project with production-style structure.\n\nScope:\n- Setup folder structure (modules, config, database, shared)\n- Configure TypeScript\n- Setup ESLint + Prettier + Husky hooks\n- Create environment configuration loader\n- Add centralized error handling pattern\n- Add health check endpoint\n\nAcceptance Criteria:\n- Project builds without errors\n- Lint + format run automatically\n- Environment variables validated at startup\n- Base architecture ready for scaling",
-    "labels": ["setup", "architecture"]
+    "id": 11,
+    "title": "Create order from cart (POST /orders)",
+    "epic": "Epic 1 — Order Creation",
+    "labels": [
+      "feature",
+      "backend",
+      "priority: high"
+    ],
+    "body": {
+      "context": "When a user selects ticket types, a new `orders` record must be created in `pending` status and linked to one or more `order_items`.",
+      "acceptance_criteria": [
+        "Authenticated user can POST with `ticket_type_id` + `quantity`",
+        "Server validates `quantity_sold < quantity_total` on `ticket_types`",
+        "Creates `orders` row with `status = pending` and correct `total_amount`",
+        "Creates one `order_items` row per ticket type with `unit_price` snapshot",
+        "Returns `order.id` and full order payload",
+        "Returns 409 if tickets are sold out"
+      ]
+    }
   },
   {
-    "title": "PostgreSQL Integration & Database Layer",
-    "body": "Configure database connectivity and abstraction layer.\n\nScope:\n- Setup PostgreSQL connection with pooling\n- Create database module\n- Add migration system\n- Configure transactional support\n- Add base repository pattern\n- Setup query logging for development\n\nAcceptance Criteria:\n- DB connects successfully\n- Migration runs via CLI\n- Transactions supported\n- Connection pooling configured",
-    "labels": ["database", "infrastructure"]
+    "id": 12,
+    "title": "Order expiry job — auto-cancel stale pending orders",
+    "epic": "Epic 1 — Order Creation",
+    "labels": [
+      "backend",
+      "priority: medium"
+    ],
+    "body": {
+      "context": "Orders left in `pending` status must expire after a configurable TTL (e.g. 15 min) to free reserved seats.",
+      "acceptance_criteria": [
+        "Cron/worker runs every N minutes",
+        "Sets `orders.status = expired` for unpaid orders past TTL",
+        "Does not affect orders already in `paid` or `cancelled`",
+        "Emits an event/log entry per expired order"
+      ]
+    }
   },
   {
-    "title": "Users Schema + Migration + Constraints",
-    "body": "Design and implement production-ready users table.\n\nScope:\n- Create users migration\n- Add constraints (unique email, not null fields)\n- Add indexes for lookup performance\n- Implement soft delete support\n- Add timestamps and auditing fields\n- Validate schema with seed data\n\nAcceptance Criteria:\n- Migration reversible\n- Indexes applied correctly\n- Duplicate email rejected\n- Schema tested with inserts",
-    "labels": ["database", "auth"]
+    "id": 13,
+    "title": "GET /orders/:id — order detail endpoint",
+    "epic": "Epic 1 — Order Creation",
+    "labels": [
+      "api",
+      "priority: medium"
+    ],
+    "body": {
+      "context": "Provides a read endpoint for order details including nested items and current status.",
+      "acceptance_criteria": [
+        "Returns order with nested `order_items` and current `status`",
+        "Only the owning user or an admin can fetch",
+        "404 if not found, 403 if not owner"
+      ]
+    }
   },
   {
-    "title": "Authentication Module (Registration Flow)",
-    "body": "Implement secure user registration system.\n\nScope:\n- Input validation layer\n- Password hashing (bcrypt)\n- DTO + service + controller layers\n- Error handling strategy\n- Prevent duplicate registrations\n- Add unit tests for service logic\n\nAcceptance Criteria:\n- Password stored hashed\n- Validation errors handled cleanly\n- API tested via Postman\n- Unit tests passing",
-    "labels": ["backend", "auth"]
+    "id": 14,
+    "title": "Initiate payment — POST /payments",
+    "epic": "Epic 2 — Payment Processing",
+    "labels": [
+      "feature",
+      "backend",
+      "priority: high"
+    ],
+    "body": {
+      "context": "Creates a `payments` record linked to an `order_id` and calls the chosen payment provider to get a checkout URL / intent.",
+      "acceptance_criteria": [
+        "Accepts `order_id` and `provider` (enum)",
+        "Validates order is still in `pending` status",
+        "Creates `payments` row with `status = pending` and provider's `transaction_ref`",
+        "Returns provider redirect URL or client secret",
+        "Idempotent — re-calling returns the existing pending payment for the same order"
+      ]
+    }
   },
   {
-    "title": "JWT Authentication & Authorization Middleware",
-    "body": "Implement login + token-based authentication.\n\nScope:\n- Login endpoint\n- JWT generation + verification\n- Auth middleware\n- Role-based guard structure\n- Token expiration strategy\n- Secure config management\n\nAcceptance Criteria:\n- Protected routes require token\n- Invalid tokens rejected\n- Middleware reusable\n- Auth flow documented",
-    "labels": ["backend", "security"]
+    "id": 15,
+    "title": "Payment webhook handler — confirm or fail payment",
+    "epic": "Epic 2 — Payment Processing",
+    "labels": [
+      "feature",
+      "backend",
+      "priority: high"
+    ],
+    "body": {
+      "context": "The payment provider calls back with success/failure. This handler must atomically update `payments` and `orders` and trigger ticket issuance on success.",
+      "acceptance_criteria": [
+        "Validates provider signature / HMAC before processing",
+        "On success: sets `payments.status = paid`, sets `orders.status = paid`",
+        "On failure: sets `payments.status = failed`, leaves order in `pending` (retriable)",
+        "Publishes internal `payment.succeeded` event for ticket generation",
+        "Returns HTTP 200 to provider regardless to prevent retries on already-processed events",
+        "Idempotent — duplicate webhooks for same `transaction_ref` are no-ops"
+      ]
+    }
   },
   {
-    "title": "Organizer Domain Modeling",
-    "body": "Implement organizer entity and relation to users.\n\nScope:\n- Create organizers table\n- Define 1:1 relation with users\n- Add verification flag + metadata\n- Implement organizer creation flow\n- Add authorization rules\n- Seed organizer test data\n\nAcceptance Criteria:\n- Organizer linked correctly to user\n- Cannot create event without organizer role\n- Schema validated with joins",
-    "labels": ["database", "domain"]
+    "id": 16,
+    "title": "Cancel order and refund — POST /orders/:id/cancel",
+    "epic": "Epic 2 — Payment Processing",
+    "labels": [
+      "api",
+      "priority: medium"
+    ],
+    "body": {
+      "context": "Allows users or admins to cancel an order and trigger a refund if payment was already made.",
+      "acceptance_criteria": [
+        "Only callable by order owner or admin",
+        "Sets `orders.status = cancelled`",
+        "If a `paid` payment exists, triggers refund via provider and updates `payments.status`",
+        "Invalidates any issued tickets for this order (`tickets.status = cancelled`)",
+        "Returns 409 if order is already cancelled/expired"
+      ]
+    }
   },
   {
-    "title": "Venues Management Module",
-    "body": "Create venue model for hosting events.\n\nScope:\n- Venues schema + migration\n- Capacity validation logic\n- Geo-location fields\n- CRUD endpoints for venues\n- Add indexing for city searches\n- Add sample venue dataset\n\nAcceptance Criteria:\n- Venue CRUD functional\n- Capacity enforced\n- Queries optimized with indexes",
-    "labels": ["database", "backend"]
+    "id": 17,
+    "title": "Issue tickets on payment success",
+    "epic": "Epic 3 — Ticket Issuance",
+    "labels": [
+      "feature",
+      "backend",
+      "priority: high"
+    ],
+    "body": {
+      "context": "On `payment.succeeded` event, generate one `tickets` row per seat purchased, each with a unique QR code.",
+      "acceptance_criteria": [
+        "Listens to `payment.succeeded` event (or called synchronously from webhook handler)",
+        "For each unit in `order_items.quantity`, creates a `tickets` row with `status = active`",
+        "`ticket_code` is a UNIQUE, cryptographically random QR-safe string",
+        "Sets `tickets.issued_at` to current timestamp",
+        "Idempotent — re-running for the same `order_item_id` must not create duplicates"
+      ]
+    }
   },
   {
-    "title": "Events Core Domain Implementation",
-    "body": "Implement main events entity and lifecycle.\n\nScope:\n- Events table with FK relations\n- Status lifecycle (draft → published → cancelled)\n- Date validation logic\n- Event creation service\n- Organizer ownership enforcement\n- Add integration tests\n\nAcceptance Criteria:\n- Event linked to venue + organizer\n- Invalid dates rejected\n- Lifecycle works correctly",
-    "labels": ["core", "backend"]
+    "id": 18,
+    "title": "Check-in endpoint — POST /event-checkins",
+    "epic": "Epic 3 — Ticket Issuance",
+    "labels": [
+      "api",
+      "priority: medium"
+    ],
+    "body": {
+      "context": "Handles QR code scanning at event gates to mark attendees as checked in.",
+      "acceptance_criteria": [
+        "Accepts `ticket_code` (QR scan) and `gate`, `device_id`",
+        "Validates ticket is `active` and belongs to the correct event",
+        "Creates `event_checkins` row with `checked_in_at`",
+        "Sets `tickets.status = used`",
+        "Returns 409 if ticket already checked in"
+      ]
+    }
   },
   {
-    "title": "Event Creation API + Validation Layer",
-    "body": "Expose production-ready API for creating events.\n\nScope:\n- Request validation schemas\n- Authorization enforcement\n- Service-level business validation\n- Logging for audit trail\n- API response standardization\n- Add error scenarios testing\n\nAcceptance Criteria:\n- Only organizers allowed\n- Validation prevents bad input\n- Responses follow unified format",
-    "labels": ["backend", "api"]
+    "id": 19,
+    "title": "DB migrations — orders, order_items, payments, tickets, event_checkins",
+    "epic": "Epic 4 — Data Layer & Tests",
+    "labels": [
+      "database",
+      "priority: high"
+    ],
+    "body": {
+      "context": "Create all tables required by the order and payment cycle with correct schema, constraints, and indexes.",
+      "acceptance_criteria": [
+        "Migration creates all five tables with correct columns, types, and FK constraints per the ER diagram",
+        "Indexes on `orders.user_id`, `order_items.order_id`, `payments.order_id`, `tickets.ticket_code` (unique), `tickets.order_item_id`",
+        "Migration is reversible (down migration provided)"
+      ]
+    }
   },
   {
-    "title": "Ticket Types Domain (Pricing Engine Foundation)",
-    "body": "Implement ticket tier system for events.\n\nScope:\n- Ticket types schema\n- Pricing + quantity constraints\n- Sale window validation\n- Prevent overselling logic foundation\n- Index for fast availability lookup\n- Prepare structure for future dynamic pricing\n\nAcceptance Criteria:\n- Ticket types linked to event\n- Quantity cannot go negative\n- Sale window enforced\n- Query performance validated",
-    "labels": ["ticketing", "core"]
+    "id": 20,
+    "title": "Integration tests — full order-to-ticket happy path",
+    "epic": "Epic 4 — Data Layer & Tests",
+    "labels": [
+      "testing",
+      "priority: medium"
+    ],
+    "body": {
+      "context": "End-to-end integration tests covering the full order, payment, and ticket issuance cycle including edge cases.",
+      "scenarios": [
+        "Create order → initiate payment → simulate webhook success → assert tickets created",
+        "Create order → let it expire → assert status = expired, no tickets",
+        "Create order → initiate payment → simulate webhook failure → assert order still pending, payment failed",
+        "Duplicate webhook → assert idempotent (no double tickets)",
+        "Check-in valid ticket → assert event_checkins row and ticket status = used",
+        "Check-in already-used ticket → assert 409"
+      ]
+    }
   }
 ]

@@ -1,5 +1,4 @@
 const axios = require('axios');
-
 const issues = require('./issues.json');
 
 const api = axios.create({
@@ -10,12 +9,31 @@ const api = axios.create({
   },
 });
 
+function formatBody(body) {
+  if (!body) return '';
+
+  let text = '';
+  if (body.context) text += `Context:\n${body.context}\n\n`;
+
+  if (body.acceptance_criteria) {
+    text += 'Acceptance Criteria:\n';
+    text += body.acceptance_criteria.map(c => `- ${c}`).join('\n') + '\n';
+  }
+
+  if (body.scenarios) {
+    text += 'Scenarios:\n';
+    text += body.scenarios.map(s => `- ${s}`).join('\n') + '\n';
+  }
+
+  return text;
+}
+
 async function createIssue(issue) {
   await api.post(
-    `/repos/${process.env.REPO_OWNER}/${process.env.REPO_NAME}/issues`,
+    `/repos/${process.env.REPO_OWNER || 'Abdalla881'}/${process.env.REPO_NAME || 'event-ticketing-system'}/issues`,
     {
       title: issue.title,
-      body: issue.body,
+      body: formatBody(issue.body),
       labels: issue.labels,
     },
   );
