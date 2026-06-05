@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { OrdersController } from './orders.controller';
 import { AuthModule } from 'src/auth/auth.module';
 import { CreateOrderUseCase } from './use-cases/create-order.usecase';
+import { GetOrderUseCase } from './use-cases/get-order.usecase';
+import { DeleteOrderUseCase } from './use-cases/delete-order.usecase';
 import { OrderRepositoryImpl } from './repositories/order.repository';
 import { TicketTypeRepositoryImpl } from './repositories/ticket-type.repository';
 import { TicketTypesService } from 'src/ticket-types/service/ticket-types.service';
@@ -12,6 +14,8 @@ import { Pool } from 'pg';
   controllers: [OrdersController],
   providers: [
     CreateOrderUseCase,
+    GetOrderUseCase,
+    DeleteOrderUseCase,
     OrderRepositoryImpl,
     TicketTypesService,
 
@@ -27,3 +31,4 @@ import { Pool } from 'pg';
   ],
 })
 export class OrdersModule { }
+

@@ -4,8 +4,8 @@ import { Inject, Injectable } from "@nestjs/common";
 
 export interface IOrderRepository {
     save(order: Order): Promise<void>;
-
     findById(id: string): Promise<Order | null>;
+    delete(id: string): Promise<void>;
 }
 
 @Injectable()
@@ -71,7 +71,7 @@ export class OrderRepositoryImpl implements IOrderRepository {
     `;
         const order = await this.pool.query(query, [id])
         if (order.rows.length === 0) {
-            throw new Error("Order not found")
+            return null;
         }
         const orderEntity = new Order(order.rows[0].user_id)
         const orderId = order.rows[0].id
@@ -92,6 +92,36 @@ export class OrderRepositoryImpl implements IOrderRepository {
                 totalPrice: row.total_price,
             })
         })
-        return orderEntity
+        return orderEntity;
+    }
+
+    async delete(id: string): Promise<void> {
+        const client = await this.pool.connect();
+        try {
+            await client.query('BEGIN');
+
+            // 1 - Restore ticket stock for each order item
+            const restoreStockQuery = `
+                UPDATE ticket_type
+                SET quantity_sold = quantity_sold - oi.quantity
+                FROM order_items oi
+                WHERE oi.order_id = $1
+                AND ticket_type.id = oi.ticket_type_id
+            `;
+            await client.query(restoreStockQuery, [id]);
+
+            // 2 - Delete order items
+            await client.query('DELETE FROM order_items WHERE order_id = $1', [id]);
+
+            // 3 - Delete the order
+            await client.query('DELETE FROM orders WHERE id = $1', [id]);
+
+            await client.query('COMMIT');
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            client.release();
+        }
     }
 }
